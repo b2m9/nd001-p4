@@ -1,0 +1,34 @@
+{
+  "name": "nd001-p4",
+  "version": "0.0.1",
+  "description": "Udacity FEND assignment 4",
+  "main": "index.html",
+  "dependencies": {
+    "grunt": "^0.4.5"
+  },
+  "devDependencies": {
+    "grunt-cli": "^1.1.0",
+    "grunt-contrib-copy": "^1.0.0",
+    "grunt-contrib-cssmin": "^1.0.1",
+    "grunt-contrib-htmlmin": "^1.1.0",
+    "grunt-contrib-imagemin": "^1.0.0",
+    "grunt-contrib-uglify": "^1.0.1",
+    "imagemin": "^4.0.0",
+    "imagemin-jpegoptim": "^4.1.0",
+    "imagemin-pngquant": "^4.2.2",
+    "imagemin-zopfli": "^4.2.0"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b2m9/nd001-p4.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/b2m9/nd001-p4/issues"
+  },
+  "homepage": "https://github.com/b2m9/nd001-p4#readme"
+}
