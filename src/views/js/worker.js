@@ -77,7 +77,7 @@ function makeRandomPizza() {
 }
 
 /*************
- * There's absolutely no reason to read the code beyond this point.
+ * There's absolutely no reason to read the code beyond this point. Srsly.
  *************/
 
 // Pulls adjective out of array using random number sent from generator

@@ -29,7 +29,13 @@ window.requestAnimFrame = (function() {
   d.querySelector("#sizeSlider").addEventListener("change", resizePizzas);
   w.addEventListener("scroll", onScroll);
 
-  // worker creates an HTML string that needs to be added to DOM tree
+  /**
+   * Insert HTML string of pizza menu to DOM.
+   * Trigger `mark_end_generating` performance mark.
+   * Create `measure_frame_duration` performance measure.
+   * @function
+   * @param {object} ev - event object
+   */
   menuWorker.onmessage = function(ev) {
     requestAnimFrame(function() {
       d.querySelector("#randomPizzas").innerHTML += ev.data;
@@ -38,13 +44,18 @@ window.requestAnimFrame = (function() {
         w.performance.mark("mark_end_generating");
         w.performance.measure("measure_pizza_generation", "mark_start_generating", "mark_end_generating");
 
-        console.log("Time to generate pizzas on load: " + w.performance.getEntriesByName("measure_pizza_generation")[0].duration + "ms");
+        console.log("Non-representative time to generate pizzas on load: " + w.performance.getEntriesByName("measure_pizza_generation")[0].duration + "ms");
       }
 
       menuWorker.terminate();
     });
   };
 
+  /**
+   * Build the pizza menu and moving background images.
+   * Trigger `mark_start_generating` performance mark.
+   * @function
+   */
   function build() {
     if (perfAvailable) {
       // non-representative perf marker for creating menu
@@ -58,9 +69,13 @@ window.requestAnimFrame = (function() {
     createMovingPizzas();
   }
 
-  // create as many moving pizzas as needed, but not more
-  // TODO: respond to resize
-  // TODO: move it to a worker?
+  /**
+   * Create moving background images based on width and height of screen.
+   * Call `updatePizzaPositions` when finished.
+   * TODO: respond to window resize
+   * TODO: move logic to web worker
+   * @function
+   */
   function createMovingPizzas() {
     var width = w.screen.width;
     var height = w.screen.height;
@@ -93,6 +108,13 @@ window.requestAnimFrame = (function() {
     updatePizzaPositions();
   }
 
+  /**
+   * Adjust position of background images based on scroll position.
+   * Trigger `mark_start_frame` performance mark.
+   * Trigger `mark_end_frame` performance mark.
+   * Create `measure_frame_duration` performance measure.
+   * @function
+   */
   function updatePizzaPositions() {
     var i = 0;
     var phase, el;
@@ -101,6 +123,9 @@ window.requestAnimFrame = (function() {
     if (perfAvailable) {
       w.performance.mark("mark_start_frame");
     }
+
+    // The idea for sliding background pizzas is from Ilya's demo found at:
+    // www.igvita.com/slides/2012/devtools-tips-and-tricks/jank-demo.html
 
     for (; i < movingPizzasLength; i++) {
       el = movingPizzas[i];
@@ -122,6 +147,10 @@ window.requestAnimFrame = (function() {
     ticking = false;
   }
 
+  /**
+   * Scrollhandler to trigger `updatePizzzaPositions` if queue is empty.
+   * @function
+   */
   function onScroll() {
     // only use RAF if no queue
     if (!ticking) {
@@ -131,6 +160,14 @@ window.requestAnimFrame = (function() {
     }
   }
 
+  /**
+   * Scrollhandler to trigger `updatePizzzaPositions` if queue is empty.
+   * Trigger `mark_start_resize` performance mark.
+   * Trigger `mark_end_resize` performance mark.
+   * Create `measure_pizza_resize` performance measure.
+   * @function
+   * @param {object} ev - event object
+   */
   function resizePizzas(ev) {
     if (perfAvailable) {
       w.performance.mark("mark_start_resize"); // User Timing API function
@@ -141,14 +178,19 @@ window.requestAnimFrame = (function() {
     changePizzaSizes(ev.target.value);
 
     if (perfAvailable) {
-      // User Timing API is awesome
       w.performance.mark("mark_end_resize");
       w.performance.measure("measure_pizza_resize", "mark_start_resize", "mark_end_resize");
+
       var timeToResize = w.performance.getEntriesByName("measure_pizza_resize");
       console.log("Time to resize pizzas: " + timeToResize[timeToResize.length - 1].duration + "ms");
     }
   }
 
+  /**
+   * Change text in slider label.
+   * @function
+   * @param {integer} size - value of range slider to change label
+   */
   function changeSliderLabel(size) {
     switch (size) {
       case "1":
@@ -165,27 +207,41 @@ window.requestAnimFrame = (function() {
     }
   }
 
+  /**
+   * Change size of images in menu based on range slider.
+   * @function
+   * @param {integer} size - value of range slider to adjust size of image
+   */
   function changePizzaSizes(size) {
     var len = pizzas.length;
-    var i, dx, newwidth;
+    var offset = pizzas[0].offsetWidth;
+    var i, dx, newWidth;
 
     for (i = 0; i < len; i++) {
-      dx = determineDx(pizzas[i].offsetWidth, size);
-      newwidth = (pizzas[i].offsetWidth + dx) + "px";
+      dx = determineDx(offset, size);
+      newWidth = (offset + dx) + "px";
 
-      pizzas[i].style.width = newwidth;
+      pizzas[i].style.width = newWidth;
     }
   }
 
+  /**
+   * Calculate change factor for width manipulation of image.
+   * @function
+   * @param {integer} offset - offset of image
+   * @param {integer} size - value of range slider to adjust size of image
+   * @returns {float} change factor
+   */
   function determineDx(offset, size) {
-    var oldSize = offset / windowWidth;
-
-    //   // Optional TODO: change to 3 sizes? no more xl?
-    //   // Changes the slider value to a percent width
-
-    return (sizeSwitcher(size) - oldSize) * windowWidth;
+    return (sizeSwitcher(size) - (offset / windowWidth)) * windowWidth;
   }
 
+  /**
+   * Determines size factor based on parameter `size`.
+   * @function
+   * @param {integer} size - value of range slider to adjust size of image
+   * @returns {float} size factor
+   */
   function sizeSwitcher(size) {
     switch (size) {
       case "1":
@@ -199,25 +255,21 @@ window.requestAnimFrame = (function() {
     }
   }
 
-  // Logs average amount of time per 10 frames needed to move the sliding background pizzas on scroll.
-  // times is the array of User Timing measurements from updatePizzaPositions()
+  /**
+   * Log average amount of time per 10 frames needed to scroll.
+   * @function
+   * @param {integer} size - value of range slider to adjust size of image
+   * @returns {float} size factor
+   */
   function logAverageFrame(times) {
     var numberOfEntries = times.length;
     var sum = 0;
+    var i;
 
-    for (var i = numberOfEntries - 1; i > numberOfEntries - 11; i--) {
+    for (i = numberOfEntries - 1; i > numberOfEntries - 11; i--) {
       sum = sum + times[i].duration;
     }
 
     console.log("Average time to generate last 10 frames: " + sum / 10 + "ms");
   }
-
 }(window, document));
-
-// The following code for sliding background pizzas was pulled from Ilya's demo found at:
-// https://www.igvita.com/slides/2012/devtools-tips-and-tricks/jank-demo.html
-
-
-// TODO: put the generation in a web worker
-
-// TODO: RESIZE THE DAMN PICTURE
